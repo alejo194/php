@@ -1,2 +1,2 @@
 # php
-php image
+php-fpm docker image安装
