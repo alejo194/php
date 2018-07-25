@@ -116,6 +116,9 @@ RUN buildDeps=" \
      && docker-php-ext-download xdebug 2.3.2 \
      && docker-php-ext-install xdebug \
 
+     && docker-php-ext-configure gettext --with-gettext \
+     && docker-php-ext-install gettext \
+
      && rm -Rf /tmp/pear \
      && apt-get autoclean \
      && apt-get clean \
