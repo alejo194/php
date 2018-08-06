@@ -127,6 +127,41 @@ RUN buildDeps=" \
  COPY ./php-fpm.conf /usr/local/etc/
  COPY ./start.sh /usr/local/bin/start.sh
  COPY ./docker-php-ext-xdebug.ini /usr/local/etc/php/conf.d/
+ 
+ ## install freetds
+ RUN apt-get update -qq && apt-get install -y --no-install-recommends build-essential libpq-dev nodejs libc6-dev wget
+ RUN wget ftp://ftp.freetds.org/pub/freetds/stable/freetds-1.00.27.tar.gz && \
+                tar -xzf freetds-1.00.27.tar.gz && \
+                cd freetds-1.00.27 && \
+                ./configure --prefix=/usr/local --with-tdsver=7.3 && \
+                make && \
+                make install
+
+## install sys environment language
+ RUN apt-get update && apt-get install -y \
+    libmcrypt-dev \
+    openssl \
+    locales \
+    gettext \
+    wget \
+    git \
+    libicu-dev \
+    zlib1g-dev
+
+ RUN dpkg-reconfigure locales \
+        && locale-gen \
+        && /usr/sbin/update-locale LANG=C.UTF-8
+
+ RUN echo 'zh_CN.UTF-8 UTF-8' >> /etc/locale.gen \
+    && echo 'id_ID.UTF-8 UTF-8' >> /etc/locale.gen \
+    && echo 'ko_KR.UTF-8 UTF-8' >> /etc/locale.gen \
+    && echo 'zh_TW.UTF-8 UTF-8' >> /etc/locale.gen \
+    && echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen \
+        && locale-gen
+
+ ENV LC_ALL C.UTF-8
+ ENV LANG en_US.UTF-8
+ ENV LANGUAGE en_US.UTF-8
 
  WORKDIR /var/www/html
  EXPOSE 9000
