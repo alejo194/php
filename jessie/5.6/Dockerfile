@@ -79,7 +79,8 @@ RUN buildDeps=" \
      && cp /usr/src/php/php.ini-production $PHP_INI_DIR/php.ini \
      && echo 'date.timezone = "Asia/Taipei"' >> $PHP_INI_DIR/php.ini \
      && echo 'expose_php = Off' >> $PHP_INI_DIR/php.ini \
-     && sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" $PHP_INI_DIR/php.ini
+     && sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" $PHP_INI_DIR/php.ini \
+     && sed -i "s/memory_limit = 128M/memory_limit = 256M/" $PHP_INI_DIR/php.ini
 
  RUN apt-get update && apt-get install -y \
          freetds-dev \
