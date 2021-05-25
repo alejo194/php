@@ -9,32 +9,32 @@ FROM debian:jessie
 # prevent Debian's PHP packages from being installed
 # https://github.com/docker-library/php/pull/542
 RUN set -eux; \
-	{ \
-		echo 'Package: php*'; \
-		echo 'Pin: release *'; \
-		echo 'Pin-Priority: -1'; \
-	} > /etc/apt/preferences.d/no-debian-php
+        { \
+                echo 'Package: php*'; \
+                echo 'Pin: release *'; \
+                echo 'Pin-Priority: -1'; \
+        } > /etc/apt/preferences.d/no-debian-php
 
 # dependencies required for running "phpize"
 # (see persistent deps below)
 ENV PHPIZE_DEPS \
-		autoconf \
-		dpkg-dev \
-		file \
-		g++ \
-		gcc \
-		libc-dev \
-		make \
-		pkg-config \
-		re2c
+                autoconf \
+                dpkg-dev \
+                file \
+                g++ \
+                gcc \
+                libc-dev \
+                make \
+                pkg-config \
+                re2c
 
 # persistent / runtime deps
 RUN apt-get update && apt-get install -y \
-		$PHPIZE_DEPS \
-		ca-certificates \
-		curl \
-		xz-utils \
-	--no-install-recommends && rm -r /var/lib/apt/lists/*
+                $PHPIZE_DEPS \
+                ca-certificates \
+                curl \
+                xz-utils \
+        --no-install-recommends && rm -r /var/lib/apt/lists/*
 
 ENV PHP_INI_DIR /usr/local/etc/php
 RUN mkdir -p $PHP_INI_DIR/conf.d
@@ -63,115 +63,121 @@ RUN set -xe \
 
 ENV PHP_VERSION 5.4.45
 ENV PHP_URL="http://php.net/get/php-5.4.45.tar.bz2/from/this/mirror" PHP_ASC_URL="http://php.net/get/php-5.4.45.tar.bz2.asc/from/this/mirror"
-
+ENV ZEND="http://downloads.zend.com/guard/6.0.0/"
+ENV ZENDNAME="ZendGuardLoader-70429-PHP-5.4-linux-glibc23-x86_64.tar.gz"
 RUN set -xe; \
-	\
-	fetchDeps=' \
-		wget \
-	'; \
-	if ! command -v gpg > /dev/null; then \
-		fetchDeps="$fetchDeps \
-			dirmngr \
-			gnupg \
-		"; \
-	fi; \
-	apt-get update; \
-	apt-get install -y --no-install-recommends $fetchDeps; \
-	rm -rf /var/lib/apt/lists/*; \
-	\
-	mkdir -p /usr/src; \
-	cd /usr/src; \
-	\
-	wget -O php.tar.bz2 "$PHP_URL"; \
-	\
-	if [ -n "$PHP_SHA256" ]; then \
-		echo "$PHP_SHA256 *php.tar.bz2" | sha256sum -c -; \
-	fi; \
-	if [ -n "$PHP_MD5" ]; then \
-		echo "$PHP_MD5 *php.tar.bz2" | md5sum -c -; \
-	fi; \
-	\
-	if [ -n "$PHP_ASC_URL" ]; then \
-		wget -O php.tar.bz2.asc "$PHP_ASC_URL"; \
-		export GNUPGHOME="$(mktemp -d)"; \
-		for key in $GPG_KEYS; do \
-			gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
-		done; \
-		gpg --batch --verify php.tar.bz2.asc php.tar.bz2; \
-		rm -rf "$GNUPGHOME"; \
-	fi; \
-	\
-	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $fetchDeps
+        \
+        fetchDeps=' \
+                wget \
+        '; \
+        if ! command -v gpg > /dev/null; then \
+                fetchDeps="$fetchDeps \
+                        dirmngr \
+                        gnupg \
+                "; \
+        fi; \
+        apt-get update; \
+        apt-get install -y --no-install-recommends $fetchDeps; \
+        rm -rf /var/lib/apt/lists/*; \
+        \
+        mkdir -p /usr/src; \
+        cd /usr/src; \
+        \
+        wget -O php.tar.bz2 "$PHP_URL"; \
+        \
+        if [ -n "$PHP_SHA256" ]; then \
+                echo "$PHP_SHA256 *php.tar.bz2" | sha256sum -c -; \
+        fi; \
+        if [ -n "$PHP_MD5" ]; then \
+                echo "$PHP_MD5 *php.tar.bz2" | md5sum -c -; \
+        fi; \
+        \
+        if [ -n "$PHP_ASC_URL" ]; then \
+                wget -O php.tar.bz2.asc "$PHP_ASC_URL"; \
+                export GNUPGHOME="$(mktemp -d)"; \
+                for key in $GPG_KEYS; do \
+                        gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
+                done; \
+                gpg --batch --verify php.tar.bz2.asc php.tar.bz2; \
+                rm -rf "$GNUPGHOME"; \
+        fi; \
+        \
+        ####install 支持ZendGuard加密的PHP代码####
+        mkdir -p /usr/local/zend; \
+        wget -O zend.tar.gz ${ZEND}${ZENDNAME} ; \
+        tar zxvf zend.tar.gz ; \
+        cp ZendGuardLoader-70429-PHP-5.4-linux-glibc23-x86_64/php-5.4.x/ZendGuardLoader.so /usr/local/zend/; \
+        apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $fetchDeps
 
 COPY docker-php-source /usr/local/bin/
 
 RUN set -eux; \
-	\
-	savedAptMark="$(apt-mark showmanual)"; \
-	apt-get update; \
-	apt-get install -y --no-install-recommends \
-		libcurl4-openssl-dev \
-		libpcre3-dev \
-		libreadline6-dev \
-		librecode-dev \
-		libedit-dev \
-		libsqlite3-dev \
-		libssl-dev \
-		libxml2-dev \
-		zlib1g-dev \
-		bzip2 \
-		${PHP_EXTRA_BUILD_DEPS:-} \
-	; \
-	rm -rf /var/lib/apt/lists/*; \
-	\
-	export \
-		CFLAGS="$PHP_CFLAGS" \
-		CPPFLAGS="$PHP_CPPFLAGS" \
-		LDFLAGS="$PHP_LDFLAGS" \
-	; \
-	docker-php-source extract; \
-	cd /usr/src/php; \
-	./configure \
-		--with-config-file-path="$PHP_INI_DIR" \
-		--with-config-file-scan-dir="$PHP_INI_DIR/conf.d" \
-		$PHP_EXTRA_CONFIGURE_ARGS \
-		--disable-cgi \
-		--enable-mysqlnd \
-		--with-curl \
-		--with-openssl \
-		--with-pcre \
-		--with-readline \
-		--with-recode \
-		--with-zlib \
-		--enable-mbstring \
-	; \
-	make -j "$(nproc)"; \
-	make install; \
-	find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; \
-	make clean; \
-	cd /; \
-	docker-php-source delete; \
-	\
+        \
+        savedAptMark="$(apt-mark showmanual)"; \
+        apt-get update; \
+        apt-get install -y --no-install-recommends \
+                libcurl4-openssl-dev \
+                libpcre3-dev \
+                libreadline6-dev \
+                librecode-dev \
+                libedit-dev \
+                libsqlite3-dev \
+                libssl-dev \
+                libxml2-dev \
+                zlib1g-dev \
+                bzip2 \
+                ${PHP_EXTRA_BUILD_DEPS:-} \
+        ; \
+        rm -rf /var/lib/apt/lists/*; \
+        \
+        export \
+                CFLAGS="$PHP_CFLAGS" \
+                CPPFLAGS="$PHP_CPPFLAGS" \
+                LDFLAGS="$PHP_LDFLAGS" \
+        ; \
+        docker-php-source extract; \
+        cd /usr/src/php; \
+        ./configure \
+                --with-config-file-path="$PHP_INI_DIR" \
+                --with-config-file-scan-dir="$PHP_INI_DIR/conf.d" \
+                $PHP_EXTRA_CONFIGURE_ARGS \
+                --disable-cgi \
+                --enable-mysqlnd \
+                --with-curl \
+                --with-openssl \
+                --with-pcre \
+                --with-readline \
+                --with-recode \
+                --with-zlib \
+                --enable-mbstring \
+        ; \
+        make -j "$(nproc)"; \
+        make install; \
+        find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; \
+        make clean; \
+        cd /; \
+        docker-php-source delete; \
+        \
 # reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
-	apt-mark auto '.*' > /dev/null; \
-	[ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \
-	find /usr/local -type f -executable -exec ldd '{}' ';' \
-		| awk '/=>/ { print $(NF-1) }' \
-		| sort -u \
-		| xargs -r dpkg-query --search \
-		| cut -d: -f1 \
-		| sort -u \
-		| xargs -r apt-mark manual \
-	; \
-	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
-	\
-	php --version; \
-	\
+        apt-mark auto '.*' > /dev/null; \
+        [ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \
+        find /usr/local -type f -executable -exec ldd '{}' ';' \
+                | awk '/=>/ { print $(NF-1) }' \
+                | sort -u \
+                | xargs -r dpkg-query --search \
+                | cut -d: -f1 \
+                | sort -u \
+                | xargs -r apt-mark manual \
+        ; \
+        apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+        \
+        php --version; \
+        \
 # https://github.com/docker-library/php/issues/443
-	pecl update-channels; \
-	rm -rf /tmp/pear ~/.pearrc
+        pecl update-channels; \
+        rm -rf /tmp/pear ~/.pearrc
 
-COPY docker-php-ext-* docker-php-entrypoint php.ini-production /usr/local/bin/
+COPY docker-php-ext-* docker-php-entrypoint php.ini-production zend.txt  /usr/local/bin/
 RUN  set -eux \
      && mkdir -p /usr/src/php \
      && cp /usr/local/bin/php.ini-production /usr/src/php \
@@ -180,47 +186,50 @@ RUN  set -eux \
      && echo 'date.timezone = "Asia/Taipei"' >> $PHP_INI_DIR/php.ini \
      && echo 'expose_php = Off' >> $PHP_INI_DIR/php.ini \
      && sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" $PHP_INI_DIR/php.ini \
-     && sed -i "s/memory_limit = 128M/memory_limit = 256M/" $PHP_INI_DIR/php.ini
+     && sed -i "s/memory_limit = 128M/memory_limit = 256M/" $PHP_INI_DIR/php.ini \
+     && cat /usr/local/bin/zend.txt| while read line; do \
+        echo $line >> $PHP_INI_DIR/php.ini; \
+     done;
 
 ENTRYPOINT ["docker-php-entrypoint"]
 ##<autogenerated>##
 WORKDIR /var/www/html
 
 RUN set -ex \
-	&& cd /usr/local/etc \
-	&& if [ -d php-fpm.d ]; then \
-		# for some reason, upstream's php-fpm.conf.default has "include=NONE/etc/php-fpm.d/*.conf"
-		sed 's!=NONE/!=!g' php-fpm.conf.default | tee php-fpm.conf > /dev/null; \
-		cp php-fpm.d/www.conf.default php-fpm.d/www.conf; \
-	else \
-		# PHP 5.x doesn't use "include=" by default, so we'll create our own simple config that mimics PHP 7+ for consistency
-		mkdir php-fpm.d; \
-		cp php-fpm.conf.default php-fpm.d/www.conf; \
-		{ \
-			echo '[global]'; \
-			echo 'include=etc/php-fpm.d/*.conf'; \
-		} | tee php-fpm.conf; \
-	fi \
-	&& { \
-		echo '[global]'; \
-		echo 'error_log = /proc/self/fd/2'; \
-		echo; \
-		echo '[www]'; \
-		echo '; if we send this to /proc/self/fd/1, it never appears'; \
-		echo 'access.log = /proc/self/fd/2'; \
-		echo; \
-		echo 'clear_env = no'; \
-		echo; \
-		echo '; Ensure worker stdout and stderr are sent to the main error log.'; \
-		echo 'catch_workers_output = yes'; \
-	} | tee php-fpm.d/docker.conf \
-	&& { \
-		echo '[global]'; \
-		echo 'daemonize = no'; \
-		echo; \
-		echo '[www]'; \
-		echo 'listen = 9000'; \
-	} | tee php-fpm.d/zz-docker.conf
+        && cd /usr/local/etc \
+        && if [ -d php-fpm.d ]; then \
+                # for some reason, upstream's php-fpm.conf.default has "include=NONE/etc/php-fpm.d/*.conf"
+                sed 's!=NONE/!=!g' php-fpm.conf.default | tee php-fpm.conf > /dev/null; \
+                cp php-fpm.d/www.conf.default php-fpm.d/www.conf; \
+        else \
+                # PHP 5.x doesn't use "include=" by default, so we'll create our own simple config that mimics PHP 7+ for consistency
+                mkdir php-fpm.d; \
+                cp php-fpm.conf.default php-fpm.d/www.conf; \
+                { \
+                        echo '[global]'; \
+                        echo 'include=etc/php-fpm.d/*.conf'; \
+                } | tee php-fpm.conf; \
+        fi \
+        && { \
+                echo '[global]'; \
+                echo 'error_log = /proc/self/fd/2'; \
+                echo; \
+                echo '[www]'; \
+                echo '; if we send this to /proc/self/fd/1, it never appears'; \
+                echo 'access.log = /proc/self/fd/2'; \
+                echo; \
+                echo 'clear_env = no'; \
+                echo; \
+                echo '; Ensure worker stdout and stderr are sent to the main error log.'; \
+                echo 'catch_workers_output = yes'; \
+        } | tee php-fpm.d/docker.conf \
+        && { \
+                echo '[global]'; \
+                echo 'daemonize = no'; \
+                echo; \
+                echo '[www]'; \
+                echo 'listen = 9000'; \
+        } | tee php-fpm.d/zz-docker.conf
 
 ##
 RUN apt-get update && apt-get install -y \
@@ -263,8 +272,45 @@ RUN apt-get update && apt-get install -y \
      && apt-get clean \
      && rm -rf /var/lib/apt/lists/*
 
-COPY ./php-fpm.conf /usr/local/etc/
+ COPY ./php-fpm.conf /usr/local/etc/
+ COPY ./start.sh /usr/local/bin/start.sh
 
-EXPOSE 9000
-CMD ["php-fpm"]
-##</autogenerated>##
+ ## install freetds
+ RUN apt-get update -qq && apt-get install -y --no-install-recommends build-essential libpq-dev nodejs libc6-dev wget
+ RUN wget ftp://ftp.freetds.org/pub/freetds/stable/freetds-1.00.27.tar.gz && \
+                tar -xzf freetds-1.00.27.tar.gz && \
+                cd freetds-1.00.27 && \
+                ./configure --prefix=/usr/local --with-tdsver=7.3 && \
+                make && \
+                make install
+
+## install sys environment language
+ RUN apt-get update && apt-get install -y \
+    libmcrypt-dev \
+    openssl \
+    locales \
+    gettext \
+    wget \
+    git \
+    libicu-dev \
+    zlib1g-dev
+
+ RUN dpkg-reconfigure locales \
+        && locale-gen \
+        && /usr/sbin/update-locale LANG=C.UTF-8
+
+ RUN echo 'zh_CN.UTF-8 UTF-8' >> /etc/locale.gen \
+    && echo 'id_ID.UTF-8 UTF-8' >> /etc/locale.gen \
+    && echo 'ko_KR.UTF-8 UTF-8' >> /etc/locale.gen \
+    && echo 'zh_TW.UTF-8 UTF-8' >> /etc/locale.gen \
+    && echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen \
+    && echo 'vi_VN.UTF-8 UTF-8' >> /etc/locale.gen \
+        && locale-gen
+
+ ENV LC_ALL C.UTF-8
+ ENV LANG en_US.UTF-8
+ ENV LANGUAGE en_US.UTF-8
+
+ WORKDIR /var/www/html
+ EXPOSE 9000
+ CMD ["/usr/local/bin/start.sh"]
