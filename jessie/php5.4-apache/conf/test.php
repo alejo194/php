@@ -1,6 +1,6 @@
 <?php  
 header("Content-type: text/html; charset=utf-8");    
-$msdb=mssql_connect("192.168.40.53:2900","sa","maxwin80743314");  
+$msdb=mssql_connect("*.*.*.*:2900","sa","maxwin80743314");  
 if (!$msdb) {  
     echo "connect sqlserver error";  
     exit;  
