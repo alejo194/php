@@ -1,0 +1,20 @@
+version: '2'
+services:
+  webserver:
+    image: maxwinch/php:5.4-apache
+    container_name: webserver
+    restart: always
+    ports:
+      - 80:80
+    volumes:
+      - C:\maxwin\dockerconf\apache2\proxy.conf:/etc/apache2/proxy.conf
+      - C:\maxwin\dockerconf\apache2\apache2.conf:/etc/apache2/apache2.conf
+      - C:\maxwin\dockerconf\maintenance.passwd:/var/www/html/maintenance.passwd
+      - C:\maxwin\dockerconf\sites-enabled\000-default.conf:/etc/apache2/sites-enabled/000-default.conf
+      #- C:\maxwin\web\Root\AnalysisTools:/var/www/html/analysistools
+      - C:\maxwin\web\Root:/var/www/html
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
