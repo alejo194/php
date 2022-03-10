@@ -158,6 +158,7 @@ RUN buildDeps=" \
     && echo 'ko_KR.UTF-8 UTF-8' >> /etc/locale.gen \
     && echo 'zh_TW.UTF-8 UTF-8' >> /etc/locale.gen \
     && echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen \
+    && echo "ja_JP.UTF-8 UTF-8" >> /etc/locale.gen \
         && locale-gen
 
  ENV LC_ALL C.UTF-8
