@@ -95,6 +95,8 @@ RUN buildDeps=" \
      && ldconfig -v \
      && docker-php-ext-configure mssql --with-mssql \
      && docker-php-ext-install mssql \
+     && docker-php-ext-configure mysqli --with-mysqli \
+     && docker-php-ext-install mysqli \
      && docker-php-ext-configure pdo_dblib --with-pdo-dblib \
      && docker-php-ext-install pdo_dblib \
      && docker-php-ext-install mcrypt \
