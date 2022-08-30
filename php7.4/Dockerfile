@@ -34,12 +34,12 @@ RUN apt-get update && apt-get install -y \
         && docker-php-ext-install -j$(nproc) gd \
         && docker-php-ext-configure mysqli --with-mysqli \
         && docker-php-ext-install mysqli \
-        && docker-php-ext-configure uuid --with-uuid \
-        && docker-php-ext-install uuid \
+        && docker-php-ext-configure intl \
+        && docker-php-ext-install intl \
         && docker-php-ext-configure zip --with-zip \
         && docker-php-ext-install zip
-RUN     pecl install redis-5.1.1 mcrypt-1.0.5 xlswriter-1.5.2  uuid-1.2.0 intl \
-        && docker-php-ext-enable redis mcrypt xlswriter uuid intl
+RUN     pecl install redis-5.1.1 mcrypt-1.0.5 xlswriter-1.5.2  uuid-1.2.0 \
+        && docker-php-ext-enable redis mcrypt xlswriter uuid 
 ## install sys environment language
 RUN apt-get update && apt-get install -y \
     libmcrypt-dev \
