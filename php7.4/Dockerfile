@@ -22,17 +22,24 @@ RUN apt-get update && apt-get install -y \
                 libmcrypt-dev \
                 zlib1g-dev \
                 libmemcached-dev \
+                # intl depend
+                zlib1g-dev libicu-dev g++ \
+                # uuid depend
+                uuid-dev \
+                # zip depend
+                libzip-dev \
         && ln -s /usr/lib/x86_64-linux-gnu/libsybdb.so.5 /usr/lib/libsybdb.so \
         && ldconfig -v \
         && docker-php-ext-configure gd --with-freetype --with-jpeg \
         && docker-php-ext-install -j$(nproc) gd \
         && docker-php-ext-configure mysqli --with-mysqli \
         && docker-php-ext-install mysqli \
-        && docker-php-ext-configure gettext --with-gettext \
-        && docker-php-ext-install gettext
-RUN     pecl install redis-5.1.1 \
-        && pecl install xdebug-2.8.1 \
-        && docker-php-ext-enable redis xdebug
+        && docker-php-ext-configure uuid --with-uuid \
+        && docker-php-ext-install uuid \
+        && docker-php-ext-configure zip --with-zip \
+        && docker-php-ext-install zip
+RUN     pecl install redis-5.1.1 mcrypt-1.0.5 xlswriter-1.5.2  uuid-1.2.0 intl \
+        && docker-php-ext-enable redis mcrypt xlswriter uuid intl
 ## install sys environment language
 RUN apt-get update && apt-get install -y \
     libmcrypt-dev \
