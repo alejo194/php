@@ -28,6 +28,8 @@ RUN apt-get update && apt-get install -y \
                 uuid-dev \
                 # zip depend
                 libzip-dev \
+                # sqlsrv depend
+                unixodbc-dev \
         && ln -s /usr/lib/x86_64-linux-gnu/libsybdb.so.5 /usr/lib/libsybdb.so \
         && ldconfig -v \
         && docker-php-ext-configure gd --with-freetype --with-jpeg \
