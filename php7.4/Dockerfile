@@ -14,6 +14,20 @@ RUN wget ftp://ftp.freetds.org/pub/freetds/stable/freetds-1.00.27.tar.gz && \
                 ./configure --prefix=/usr/local --with-tdsver=7.3 && \
                 make && \
                 make install
+# odbc for sqlsrv 
+RUN apt-get install -y gnupg gnupg2 gnupg1 \
+    && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql18 \
+    # optional: for bcp and sqlcmd
+    && ACCEPT_EULA=Y apt-get install -y mssql-tools18 \
+    && echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc \
+    && /bin/bash -c 'source ~/.bashrc' \
+    # optional: for unixODBC development headers
+    && apt-get install -y unixodbc-dev \
+    # optional: kerberos library for debian-slim distributions
+    && apt-get install -y libgssapi-krb5-2 \
 RUN apt-get update && apt-get install -y \
                 libfreetype6-dev \
                 libjpeg62-turbo-dev \
@@ -28,8 +42,6 @@ RUN apt-get update && apt-get install -y \
                 uuid-dev \
                 # zip depend
                 libzip-dev \
-                # sqlsrv depend
-                unixodbc-dev \
         && ln -s /usr/lib/x86_64-linux-gnu/libsybdb.so.5 /usr/lib/libsybdb.so \
         && ldconfig -v \
         && docker-php-ext-configure gd --with-freetype --with-jpeg \
