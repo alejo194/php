@@ -13,4 +13,7 @@ RUN apt-get install -y gnupg gnupg2 gnupg1 \
     # optional: kerberos library for debian-slim distributions
     && apt-get install -y libgssapi-krb5-2 \
     && pecl install sqlsrv-5.10.1 pdo_sqlsrv-5.10.1 \
-    && docker-php-ext-enable sqlsrv pdo_sqlsrv
+    && docker-php-ext-enable sqlsrv pdo_sqlsrv \
+    # fanyi depend
+    && docker-php-ext-configure gettext --with-gettext \
+    && docker-php-ext-install gettext
