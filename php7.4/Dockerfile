@@ -51,7 +51,9 @@ RUN apt-get update && apt-get install -y \
         && docker-php-ext-configure intl \
         && docker-php-ext-install intl \
         && docker-php-ext-configure zip --with-zip \
-        && docker-php-ext-install zip
+        && docker-php-ext-install zip \
+        && docker-php-ext-configure gettext --with-gettext \
+        && docker-php-ext-install gettext
 RUN     pecl install redis-5.1.1 mcrypt-1.0.5 xlswriter-1.5.2  uuid-1.2.0 sqlsrv-5.10.1 pdo_sqlsrv-5.10.1 \
         && docker-php-ext-enable redis mcrypt xlswriter uuid sqlsrv pdo_sqlsrv
 ## install sys environment language
