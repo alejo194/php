@@ -77,6 +77,8 @@ RUN echo 'zh_CN.UTF-8 UTF-8' >> /etc/locale.gen \
     && echo "ja_JP.UTF-8 UTF-8" >> /etc/locale.gen \
     && echo 'vi_VN.UTF-8 UTF-8' >> /etc/locale.gen \
         && locale-gen
+RUN cd /var/www && php -r "readfile('https://getcomposer.org/installer');" | php \
+    && mv /var/www/composer.phar /usr/local/bin/composer && chmod 755 /usr/local/bin/composer
 ENV LC_ALL C.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
