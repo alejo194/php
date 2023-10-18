@@ -15,6 +15,7 @@ RUN curl https://packages.microsoft.com/keys/microsoft.asc |  tee /etc/apt/trust
     # optional: for bcp and sqlcmd
     && ACCEPT_EULA=Y apt-get install -y mssql-tools \
     && echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc \
+    && /bin/bash -c 'source ~/.bashrc' \
     # optional: for unixODBC development headers
     && apt-get install -y unixodbc-dev \
     # optional: kerberos library for debian-slim distributions
